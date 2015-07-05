@@ -3,11 +3,18 @@ package main
 import (
 	"fmt"
 	"github.com/hefju/WebGetMyData/controllers"
+	//    "github.com/hefju/WebGetMyData/tools"
+    "time"
 )
 
 func main() {
 
+	//    controllers.GoWorking()
+   t1:= time.Now()
+	 // controllers.Mytest()
     controllers.GoWorking()
+    fmt.Println("运行时间:",time.Now().Sub(t1))
+	//    tools.Input("sz")//用来导入csv数据, 名字清单
 	// tr_chan := make(chan string)    //存放数据行(tr)
 	// product_done := make(chan bool) //生产者工作完成chan
 	// job_done := make(chan bool)     //工作者完成chan

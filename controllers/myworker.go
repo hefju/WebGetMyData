@@ -14,27 +14,49 @@ import (
 
 var DailyList []*model.Daily //每日数据数组
 
+func Mytest(){
+//    list:=model.GetDaily("600048")
+//    fmt.Println(list)
+    list := model.GetStockName("sh")
+    for k, v := range list {
+        fmt.Println(k, "-", v)
+    }
+}
 //开始获取数据工作
 func GoWorking() {
 
-	code := "600048"
-	GetCode2015(code)
+    list := GetStockCode()
+    for k, v := range list {
+        _=k
+        code := v.Scode//"600048"
+//        var DailyList []*model.Daily //每日数据数组
+        GetCode2015(code)
 
-    fmt.Println(DailyList)
-	model.InsertDaily(DailyList)
+      //  fmt.Println(k, "-", v)
+    }
+    model.InsertDaily(DailyList)
+//	code := "600048"
+//	GetCode2015(code)
+//
+//    fmt.Println(DailyList)
+//	model.InsertDaily(DailyList)
+}
+func GetStockCode()[]*model.Stock{
+    list := model.GetStockName("sh")
+    return list
 }
 
 func GetCode2015(code string) {
-//	url1 := myconfig.BaseAddr + code + ".phtml?year=2015&jidu=1" //600048.phtml?year=2015&jidu=1
-//	url2 := myconfig.BaseAddr + code + ".phtml?year=2015&jidu=2"
+	url1 := myconfig.BaseAddr + code + ".phtml?year=2015&jidu=1" //600048.phtml?year=2015&jidu=1
+	url2 := myconfig.BaseAddr + code + ".phtml?year=2015&jidu=2"
 	url3 := myconfig.BaseAddr + code + ".phtml?year=2015&jidu=3"
-//	GetOneCode(url1)
-//	GetOneCode(url2)
-	GetOneCode(url3)
+	GetOneCode(url1,code)
+	GetOneCode(url2,code)
+	GetOneCode(url3,code)
 }
 
 //获取一个代号的价格
-func GetOneCode(url string) {
+func GetOneCode(url,code string) {
 
 	tr_chan := make(chan string)    //存放数据行(tr)
 	product_done := make(chan bool) //生产者工作完成chan
@@ -42,11 +64,11 @@ func GetOneCode(url string) {
 
     //fmt.Println(url)
 	filehtml := httpget(url) // FromFile() //获取html数据
-    fmt.Println(filehtml)
+    //fmt.Println(filehtml)
 	go FindTr_empty(filehtml, tr_chan, product_done)
 	go FindTr_gray(filehtml, tr_chan, product_done)
 
-	go handleOne(tr_chan, job_done)
+	go handleOne(tr_chan, job_done,code)
 
 	<-product_done //生产者完成标志
 	<-product_done
@@ -56,10 +78,10 @@ func GetOneCode(url string) {
 }
 
 //处理chan中的数据
-func handleOne(tr_chan chan string, done chan bool) {
+func handleOne(tr_chan chan string, done chan bool,code string) {
 	for elem := range tr_chan {
 		if HasDate(elem) {
-			Extract(elem)
+			Extract(elem,code)
 		}
 	}
 	done <- true
@@ -67,7 +89,7 @@ func handleOne(tr_chan chan string, done chan bool) {
 }
 
 //分析一行数据
-func Extract(elem string) {
+func Extract(elem,code string) {
 
 	//日期和数字需要独立提取, 因为他们的正则表达式不同
 	date := GetDate(elem)     //日期
@@ -85,6 +107,7 @@ func Extract(elem string) {
 	}
 
 	daily := &model.Daily{} //每日价格数据
+    daily.Scode=code
 	daily.DateStr = date
 	daily.Open = list[0]
 	daily.Highest = list[1]
